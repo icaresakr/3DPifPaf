@@ -19,7 +19,7 @@ PRE_PROCESS = {
 
 POST_PROCESS = {
     'selected': None,
-    'weighted_average': dict(kernel_size = 3),
+    'weighted_average': {"kernel_size": 3}
 }
 
 USE_CUDA = True # well use if available
