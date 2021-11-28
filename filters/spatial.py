@@ -1,5 +1,5 @@
 import math
-
+#FIXME: input config for camera resolution!
 def getValidDepth(center_x,center_y,depth_map,R_max = 15, prev_val = 0):
     
     calc_depth = 0
