@@ -50,7 +50,7 @@ CAMERA = { # camera recording parameter, attention when running batch if differe
 
 ### ii) Run the 3D pose etimation:
 #### ii.a) For a single recording 
-To run 3DPifPaf for a single recording (saved as a rosbag (.bag) file), set the ```RUN_BATCH``` parameter to ```False``` in the config.py file, and enter the directory of the folder containing the recording in ```LOAD_DIR``` the recording (.bag file) name in ```BAG_NAME```, then run the script as follow:
+To run 3DPifPaf for a single recording (saved as a rosbag (.bag) file), set the ```RUN_BATCH``` parameter to ```False``` in the config.py file, and enter the directory of the folder containing the recording in ```LOAD_DIR```, the recording name in ```BAG_NAME```, then run the script as follow:
 ```bash
 python /path/to/3dpifpafRep.py /path/to/config.py
 ```
@@ -62,6 +62,11 @@ python /path/to/3dpifpafRep.py /path/to/config.py
 ```
 
 ### 3) The extracted keypoints
+
+Extracted anatomical keypoints are saved in the folder specified in the ```SAVE_DIR``` parameter. For each body keypoint, the 3D coordinates in meters (relative to camera frame) are extracted as well as the confidence score predicted by OpenPifPaf. 
+
+The camera frame is defined bellow:
+![alt text](https://github.com/icaresakr/3DPifPaf/images/camera_frame.jpg?raw=true)
 
 
 
