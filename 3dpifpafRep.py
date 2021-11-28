@@ -8,29 +8,7 @@ Created on Mon Apr 26 16:03:47 2021
 ## FIXME: allign depth image with color image before getting the depth #FIXED
 ## FIXME: openpifpaf changes the resolution of the image, so the pixels are slightly different ?
 
-## TODO: create a modular pipeline where we can add more cams to refine the measure in an easy way, triangulation, optimization, se  openpose with multicams, calibrate cams.
-
-"""
-    dec_filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, 3);
-    spat_filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, 0.50f);
-    spat_filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, 2);
-    spat_filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, 15);
-    temp_filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, 0.4f);
-    temp_filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, 20.0f);
-    rs2::disparity_transform depth_to_disparity(true);
-    rs2::disparity_transform disparity_to_depth(true);
-    hole_filter.set_option(RS2_OPTION_HOLES_FILL, 1);
-
-    depth = dec_filter.process(depth);
-
-    depth_to_disparity.process(depth);
-    disparity_to_depth.process(depth);
-    depth = spat_filter.process(depth);
-    depth = hole_filter.process(depth);
-
-    frames = frames.apply_filter(dec_filter).apply_filter(spat_filter).apply_filter(temp_filter).apply_filter(hole_filter);
-    auto frames_aligned = align_to_depth.process(frames);
-"""
+## TODO: create a modular pipeline where we can add more cams to refine the measure in an easy way, triangulation, optimization, see openpose with multicams, calibrate cams.
 
 
 import imp
@@ -40,11 +18,8 @@ import numpy as np
 import pyrealsense2 as rs
 import cv2
 import PIL
-#import requests
 import torch
 import openpifpaf
-#import rgbdto3d
-
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
