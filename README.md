@@ -65,7 +65,7 @@ python /path/to/3dpifpafRep.py /path/to/config.py
 
 Extracted anatomical keypoints are saved as .csv files in the folder specified in the ```SAVE_DIR``` parameter. For each body keypoint, the 3D coordinates in meters (relative to camera frame) are extracted as well as the confidence score predicted by OpenPifPaf. 
 
-The camera frame is defined bellow:
+The camera frame is defined below:
 
 ![camera_frame](https://github.com/icaresakr/3DPifPaf/blob/main/images/camera_frame.png?raw=true)
 
