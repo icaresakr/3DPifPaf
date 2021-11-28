@@ -3,7 +3,7 @@
 Working on the Linux beast with the GeForce RTX3090.
 
 ## 1) Activate the 3Dpifpaf virtual environment:
-#### On a terminal, set the working directory as the 3Dpifpaf folder:
+#### On a terminal, change the working directory to the 3Dpifpaf folder:
 ```bash
 cd .../desktop/ICS/3Dpifpaf
 ```
