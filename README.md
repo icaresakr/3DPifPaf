@@ -1,6 +1,6 @@
 # 3DPifPaf
 3D extention of OpenPifPaf pose estimator, using an RGB-d Intel Realsense camera. 
-Working on the Linux beast with the GeForce RTX3090 at ~26 fps when visualization is off, and ~22 fps when on.
+For now, you can run it on the Linux beast with the GeForce RTX3090 at ~26 fps when visualization is off, and ~22 fps when on. Otherwise, frame rate will be limited by your computer's processing speed.
 
 ## 1) Activate the 3Dpifpaf virtual environment:
 #### On a terminal, change the working directory to the 3Dpifpaf folder:
