@@ -50,7 +50,7 @@ CAMERA = { # camera recording parameter, attention when running batch if differe
 
 ### 2) Run the 3D pose etimation:
 #### 2.a) For a single recording 
-To run 3DPifPaf for a single intel realsense camera recording (saved as a rosbag (.bag) file), set the ```RUN_BATCH``` parameter to ```False``` in the config.py file, and enter the .bag file name in the parameter ```BAG_NAME```, then run the script as follow:
+To run 3DPifPaf for a single recording (saved as a rosbag (.bag) file), set the ```RUN_BATCH``` parameter to ```False``` in the config.py file, and enter the .bag file name in the parameter ```BAG_NAME```, then run the script as follow:
 ```bash
 python /path/to/3dpifpafRep.py /path/to/config.py
 ```
