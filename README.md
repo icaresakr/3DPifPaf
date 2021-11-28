@@ -2,17 +2,18 @@
 3D extention of OpenPifPaf pose estimator, using an RGB-d Intel Realsense camera. 
 Working on the Linux beast with the GeForce RTX3090.
 
-## 1) On the Linux machine, go to the 3Dpifpaf folder
+## 1) Activate the 3Dpifpaf virtual environment:
+#### On a terminal, set the working directory as the 3Dpifpaf folder:
 ```bash
 cd .../desktop/ICS/3Dpifpaf
 ```
 
-## 2) Activate the 3Dpifpaf virtual environment
+#### Activate the environment with:
 ```bash
 source 3Dpifpaf/bin/activate
 ```
 
-## 3) Run 3DPifPaf
+## 2) Run 3DPifPaf
 ### 1) The configuration file [config.py](https://github.com/icaresakr/3dPifPaf/config.py)
 Define the parameters of the pose estimation.
 
