@@ -61,7 +61,7 @@ To run 3DPifPaf for all recordings located in the ```LOAD_DIR``` folder, set the
 python /path/to/3dpifpafRep.py /path/to/config.py
 ```
 
-### 3) The extracted keypoints
+## 3) The extracted keypoints
 
 Extracted anatomical keypoints are saved as a .csv file in the folder specified by the ```SAVE_DIR``` parameter. For each body keypoint, the 3D coordinates in meters (relative to camera frame) are extracted as well as the confidence score predicted by OpenPifPaf. 
 
