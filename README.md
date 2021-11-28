@@ -67,7 +67,7 @@ Extracted anatomical keypoints are saved in the folder specified in the ```SAVE_
 
 The camera frame is defined bellow:
 
-![camera_frame](https://github.com/icaresakr/3DPifPaf/images/camera_frame.jpg?raw=true)
+![camera_frame](https://github.com/icaresakr/3DPifPaf/blob/main/images/camera_frame.png?raw=true)
 
 
 
