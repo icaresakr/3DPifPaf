@@ -14,7 +14,7 @@ source 3Dpifpaf/bin/activate
 ```
 
 ## 2) Run 3DPifPaf
-### 1) The configuration file [config.py](https://github.com/icaresakr/3dPifPaf/config.py)
+### i) The configuration file [config.py](https://github.com/icaresakr/3dPifPaf/config.py)
 Define the parameters of the pose estimation.
 
 ```python
@@ -48,14 +48,14 @@ CAMERA = { # camera recording parameter, attention when running batch if differe
 }
 ```
 
-### 2) Run the 3D pose etimation:
-#### 2.a) For a single recording 
+### ii) Run the 3D pose etimation:
+#### ii.a) For a single recording 
 To run 3DPifPaf for a single recording (saved as a rosbag (.bag) file), set the ```RUN_BATCH``` parameter to ```False``` in the config.py file, and enter the directory of the folder containing the recording in ```LOAD_DIR``` the recording (.bag file) name in ```BAG_NAME```, then run the script as follow:
 ```bash
 python /path/to/3dpifpafRep.py /path/to/config.py
 ```
 
-#### 2.b) For multiple recordings (batch)
+#### ii.b) For multiple recordings (batch)
 To run 3DPifPaf for all recordings located in the ```LOAD_DIR``` folder, set the ```RUN_BATCH``` parameter to ```True``` in the config.py file, then run the script as follow:
 ```bash
 python /path/to/3dpifpafRep.py /path/to/config.py
