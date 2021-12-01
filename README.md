@@ -63,7 +63,7 @@ python /path/to/3dpifpafRep.py /path/to/config.py
 
 ## 3) The extracted keypoints
 
-Extracted anatomical keypoints are saved as a .csv file in the folder specified by the ```SAVE_DIR``` parameter. The saved dataframes file has the same name as the corresponding recording .bag file. For each body keypoint, the 3D coordinates in meters (relative to camera frame) are extracted as well as the confidence score predicted by OpenPifPaf. 
+Extracted anatomical keypoints are saved as a .csv file in the folder specified by the ```SAVE_DIR``` parameter. The saved dataframes file has the same name as the corresponding recording .bag file. For each body keypoint, the 3D coordinates in meters (relative to camera frame) are extracted as well as the confidence score predicted by OpenPifPaf and the corresponding frame timestamp. 
 
 The camera frame is defined below:
 
