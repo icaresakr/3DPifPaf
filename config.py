@@ -4,11 +4,11 @@
 # NeuroRestore
 ###
 
-LOAD_DIR = r"/home/vita-w11/Desktop/Ics/3Dpifpaf_r/" #directory of the bag files
+LOAD_DIR = r"C:\Users\yes\Desktop\ICS\recordcams\recs\\" #directory of the bag files
 
-SAVE_DIR = r"/home/vita-w11/Desktop/Ics/3Dpifpaf_r/df/" #directory of the saved dataframes
+SAVE_DIR = r"C:\Users\yes\Desktop\ICS\recordcams\recs\\" #directory of the saved files
 
-BAG_NAME = r"cam2_record_27_05_2021__13_08_49.bag" #bag file name, don't care about it if running the batch
+BAG_NAME = r"cam0_911222060790_record_24_11_2021_1417_26.bag" #bag file name, don't care about it if running the batch
 
 PRE_PROCESS = {
     'selected': ['temporal_filter', 'hole_filling_filter'],
@@ -24,7 +24,10 @@ POST_PROCESS = {
 
 USE_CUDA = True # well use if available
 
-VISUALIZATION = False # show plots and video
+VISUALIZATION = True # show plots and video
+
+EXPORT_VIDEO = True
+EXPORT_FPS = 20
 
 RUN_BATCH = True # True if convert all bag files inside LOAD_DIR
 

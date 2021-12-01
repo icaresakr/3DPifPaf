@@ -38,6 +38,22 @@ class pifpaf3D:
         self.setup_pre_filters()
         self.predictor = openpifpaf.Predictor(checkpoint='shufflenetv2k16') #openpifpaf predictor
 
+        if not os.path.exists(cfg.SAVE_DIR + "dataframes"):
+            os.makedirs(cfg.SAVE_DIR + "dataframes")
+
+        if cfg.EXPORT_VIDEO or cfg.VISUALIZATION:
+            keypoint_painter = self.init_keypoint_painter()
+            self.annotation_painter = openpifpaf.show.AnnotationPainter(painters = {'Annotation': keypoint_painter})
+
+            if cfg.EXPORT_VIDEO:
+                if not os.path.exists(cfg.SAVE_DIR + "annotated_videos"):
+                    os.makedirs(cfg.SAVE_DIR + "annotated_videos")
+                self.colorVideoRGB = cv2.VideoWriter(cfg.SAVE_DIR+"annotated_videos"+os.sep+"annotated_rgb_"+cfg.BAG_NAME[:-4]+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 
+                                                    cfg.EXPORT_FPS, (cfg.CAMERA["resolution"][0],cfg.CAMERA["resolution"][1]))
+                self.colorVideoDepth = cv2.VideoWriter(cfg.SAVE_DIR+"annotated_videos"+os.sep+"annotated_depth_"+cfg.BAG_NAME[:-4]+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 
+                                                    cfg.EXPORT_FPS, (cfg.CAMERA["resolution"][0],cfg.CAMERA["resolution"][1]))
+        
+
 
     def setup_pre_filters(self):
         selected = self.cfg.PRE_PROCESS['selected']
@@ -70,6 +86,28 @@ class pifpaf3D:
         align_to = rs.stream.color
         self.alignedFs = rs.align(align_to)
 
+    def init_keypoint_painter(self):
+        keypoint_painter = openpifpaf.show.KeypointPainter(line_width=4)
+        # Patch to ensure that only the keypoints we want are drawn
+        # todo: Source of this bug?
+        keypoint_painter.show_joint_confidences = False
+        keypoint_painter.show_joint_scales = False
+        keypoint_painter.show_frontier_order = False
+        keypoint_painter.show_joint_scales = False
+        keypoint_painter.show_joint_confidences = False
+        keypoint_painter.show_box = False
+        keypoint_painter.show_decoding_order = False
+        return keypoint_painter
+
+    def clean_axis(self, ax):
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        ax.cla()
+        ax.set_axis_off()
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+
+    
     def process_bag(self):
         
         keypoints = ['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
@@ -87,6 +125,7 @@ class pifpaf3D:
         t0 = time.time()
         ts = t0
         max_frame_nb = 0
+        i = 0
 
         try:
             while True:
@@ -118,10 +157,10 @@ class pifpaf3D:
 
                 # Convert color image to numpy array, then to Pillow image
                 color_image = np.asanyarray(color_frame.get_data())
-                norm_image = color_image/color_image.max()*255
-                norm_image = norm_image.astype('uint8')
+                #norm_image = color_image/color_image.max()*255
+                #norm_image = norm_image.astype('uint8')
                 
-                pil_img = PIL.Image.fromarray(norm_image).convert('RGB')
+                pil_img = PIL.Image.fromarray(color_image).convert('RGB')
                 predictions, gt_anns, image_meta = self.predictor.pil_image(pil_img)
 
                 if len(predictions) == 0:
@@ -154,24 +193,64 @@ class pifpaf3D:
                     df["timestamp"].append(ts-t0)
                 
                 # Visualize realsense color and depth images
-                if self.cfg.VISUALIZATION == True:
+                if self.cfg.EXPORT_VIDEO or self.cfg.VISUALIZATION:
                     depth_image = np.asanyarray(depth_frame.get_data())
                     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-                    images = np.hstack((color_image, depth_colormap))
+
+                    with openpifpaf.show.image_canvas(depth_colormap) as ax1:
+                        self.annotation_painter.annotations(ax1, predictions)
+                        fig1 = ax1.get_figure()
+                        fig1.canvas.draw()
+                        # Now we can save it to a numpy array.
+                        annotated_depth = np.frombuffer(fig1.canvas.tostring_rgb(), dtype=np.uint8)
+                        annotated_depth = annotated_depth.reshape(fig1.canvas.get_width_height()[::-1] + (3,))
+                        annotated_depth = cv2.resize(annotated_depth, dsize=(cfg.CAMERA["resolution"][0], cfg.CAMERA["resolution"][1]), interpolation=cv2.INTER_CUBIC)
+                        self.clean_axis(ax1)
                     
-                    cv2.namedWindow('Preview 3Dpifpaf', cv2.WINDOW_AUTOSIZE)
-                    cv2.imshow('Preview 3Dpifpaf', images)
-        
-                    k = cv2.waitKey(1)
-                    if k == 113: #q pressed
-                        break
+                    with openpifpaf.show.image_canvas(color_image) as ax2:
+                        self.annotation_painter.annotations(ax2, predictions)
+                        fig2 = ax2.get_figure()
+                        fig2.canvas.draw()
+                        # Now we can save it to a numpy array.
+                        annotated_rgb = np.frombuffer(fig2.canvas.tostring_rgb(), dtype=np.uint8)
+                        annotated_rgb = annotated_rgb.reshape(fig2.canvas.get_width_height()[::-1] + (3,))
+                        annotated_rgb = cv2.resize(annotated_rgb, dsize=(cfg.CAMERA["resolution"][0], cfg.CAMERA["resolution"][1]), interpolation=cv2.INTER_CUBIC)
+                        self.clean_axis(ax2)
+                    
+                    if self.cfg.VISUALIZATION:
+                        images = np.hstack((annotated_rgb, annotated_depth))
+                        cv2.namedWindow('Preview 3Dpifpaf', cv2.WINDOW_AUTOSIZE)
+                        cv2.imshow('Preview 3Dpifpaf', images)
+            
+                        k = cv2.waitKey(1)
+                        if k == 113: #q pressed
+                            break
+                    
+                    if self.cfg.EXPORT_VIDEO:
+                        if i==0:
+                            last_saved_ts = ts
+                            self.colorVideoRGB.write(annotated_rgb)
+                            self.colorVideoDepth.write(annotated_depth)
+                            last_saved_ts = time.time()
+
+                        else:
+                            elapsed = ts - last_saved_ts
+                            if elapsed > (1/self.cfg.EXPORT_FPS):
+                                self.colorVideoRGB.write(annotated_rgb)
+                                self.colorVideoDepth.write(annotated_depth)
+                                last_saved_ts = time.time()
+                
+                i+=1
             
         finally:
             # save data frame
             df_pd = pd.DataFrame.from_dict(df)
-            df_pd.to_csv(self.cfg.SAVE_DIR + "df_"+self.cfg.BAG_NAME[:-4]+".csv", index=False)
+            df_pd.to_csv(self.cfg.SAVE_DIR +"dataframes"+os.sep+ "df_"+self.cfg.BAG_NAME[:-4]+".csv", index=False)
             # close pipeline
             self.pipeline.stop()
+            if cfg.EXPORT_VIDEO:
+                self.colorVideoRGB.release()
+                self.colorVideoDepth.release()
             cv2.destroyAllWindows()
 
 
