@@ -20,7 +20,7 @@ Define the parameters of the pose estimation.
 ```python
 LOAD_DIR = r"/home/vita-w11/Desktop/Ics/3Dpifpaf_r/" #directory of the bag files
 
-SAVE_DIR = r"/home/vita-w11/Desktop/Ics/3Dpifpaf_r/df/" #directory of the saved dataframes
+SAVE_DIR = r"/home/vita-w11/Desktop/Ics/3Dpifpaf_r/df/" #directory of the saved files
 
 BAG_NAME = r"cam2_record_27_05_2021__13_08_49.bag" #bag file name, don't care about it if running the batch
 
