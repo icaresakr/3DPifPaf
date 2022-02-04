@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Apr 26 16:03:47 2021
-
 @author: Icare SAKR
 """
 
@@ -26,6 +25,7 @@ import pandas as pd
 from datetime import datetime
 import time
 import filters.spatial as utils
+import filters.temporal as tempfilt
 
 if os.name == 'nt':
     # had to do this with the windows computer, to solve openmp problem
@@ -37,6 +37,17 @@ class pifpaf3D:
         self.init_cam_params()
         self.setup_pre_filters()
         self.predictor = openpifpaf.Predictor(checkpoint='shufflenetv2k16') #openpifpaf predictor
+        self.weighted_avg = None
+        if cfg.POST_PROCESS['selected'] is not None:
+            if cfg.POST_PROCESS['selected'][0] == 'weighted_avg':
+                self.weighted_avg = tempfilt.WeightedAvg(
+                            win_size = cfg.POST_PROCESS['weighted_avg']["win_size"],
+                            thresh = cfg.POST_PROCESS['weighted_avg']["thresholds"],
+                            type = cfg.POST_PROCESS['weighted_avg']["type"],
+                            jump_detector = cfg.POST_PROCESS['weighted_avg']["jump_detector"],
+                            jump_penalty = cfg.POST_PROCESS['weighted_avg']["jump_penalty"])
+
+            
 
         if not os.path.exists(cfg.SAVE_DIR + "dataframes"):
             os.makedirs(cfg.SAVE_DIR + "dataframes")
@@ -52,6 +63,9 @@ class pifpaf3D:
                                                     cfg.EXPORT_FPS, (cfg.CAMERA["resolution"][0],cfg.CAMERA["resolution"][1]))
                 self.colorVideoDepth = cv2.VideoWriter(cfg.SAVE_DIR+"annotated_videos"+os.sep+"annotated_depth_"+cfg.BAG_NAME[:-4]+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 
                                                     cfg.EXPORT_FPS, (cfg.CAMERA["resolution"][0],cfg.CAMERA["resolution"][1]))
+                self.colorVideoNA = cv2.VideoWriter(cfg.SAVE_DIR+"annotated_videos"+os.sep+"rgb_"+cfg.BAG_NAME[:-4]+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 
+                                                    cfg.EXPORT_FPS, (cfg.CAMERA["resolution"][0],cfg.CAMERA["resolution"][1]))
+        
         
 
 
@@ -126,6 +140,14 @@ class pifpaf3D:
         ts = t0
         max_frame_nb = 0
         i = 0
+        last_saved_ts = 0
+
+        if self.weighted_avg is not None:
+            keypoints_history = {'nose':[[],[],[],[]], 'left_eye':[[],[],[],[]], 'right_eye':[[],[],[],[]], 'left_ear':[[],[],[],[]], 'right_ear':[[],[],[],[]],
+                        'left_shoulder':[[],[],[],[]], 'right_shoulder':[[],[],[],[]], 'left_elbow':[[],[],[],[]], 'right_elbow':[[],[],[],[]], 
+                        'left_wrist':[[],[],[],[]], 'right_wrist':[[],[],[],[]], 'left_hip':[[],[],[],[]], 'right_hip':[[],[],[],[]], 
+                        'left_knee':[[],[],[],[]], 'right_knee':[[],[],[],[]], 'left_ankle':[[],[],[],[]], 'right_ankle':[[],[],[],[]]}
+
 
         try:
             while True:
@@ -149,6 +171,7 @@ class pifpaf3D:
                 ts = time.time()
 
                 # apply depth preprocessing filters
+                depth_frame_un = depth_frame
                 for filter in self.depth_filters:
                     depth_frame =  filter.process(depth_frame)
                 
@@ -185,10 +208,37 @@ class pifpaf3D:
                 if len(predictions)>0: #FIXME: 
                     for i in range(len(keypoints)):
                         # I think we want 3dpifpaf to give us the data as it is, then with postprocessing we fix the data.
-                        df[predictions[0].keypoints[i]+".x"].append(cloud3d[i][0]) # x
-                        df[predictions[0].keypoints[i]+".y"].append(cloud3d[i][2]) # depth
-                        df[predictions[0].keypoints[i]+".z"].append(-cloud3d[i][1]) # altitude
-                        df[predictions[0].keypoints[i]+".proba"].append(cloud3d[i][3]) # proba
+                        if self.weighted_avg is not None:
+                            keypoints_history[predictions[0].keypoints[i]][0].append(cloud3d[i][0])
+                            keypoints_history[predictions[0].keypoints[i]][1].append(cloud3d[i][2])
+                            keypoints_history[predictions[0].keypoints[i]][2].append(cloud3d[i][1])
+                            keypoints_history[predictions[0].keypoints[i]][3].append(cloud3d[i][3])
+
+                            if len(keypoints_history[predictions[0].keypoints[i]][0]) == self.weighted_avg.win_size: #config this
+                                #filter
+                                self.weighted_avg.weighted_avg(keypoints_history[predictions[0].keypoints[i]][0], 
+                                                                        keypoints_history[predictions[0].keypoints[i]][2], 
+                                                                        keypoints_history[predictions[0].keypoints[i]][1], 
+                                                                        keypoints_history[predictions[0].keypoints[i]][3], predictions[0].keypoints[i])
+
+                                #then pop oldest keypoint
+                                keypoints_history[predictions[0].keypoints[i]][0].pop(0)
+                                keypoints_history[predictions[0].keypoints[i]][1].pop(0)
+                                keypoints_history[predictions[0].keypoints[i]][2].pop(0)
+                                keypoints_history[predictions[0].keypoints[i]][3].pop(0)
+
+                            #then update dataframe with saved keypoints
+                            df[predictions[0].keypoints[i]+".x"].append(keypoints_history[predictions[0].keypoints[i]][0][-1]) # x
+                            df[predictions[0].keypoints[i]+".y"].append(keypoints_history[predictions[0].keypoints[i]][1][-1]) # depth
+                            df[predictions[0].keypoints[i]+".z"].append(keypoints_history[predictions[0].keypoints[i]][2][-1]) # altitude
+                            df[predictions[0].keypoints[i]+".proba"].append(cloud3d[i][3]) # raw proba, unpropagated FIXME
+
+                        else:
+                            df[predictions[0].keypoints[i]+".x"].append(cloud3d[i][0]) # x
+                            df[predictions[0].keypoints[i]+".y"].append(cloud3d[i][2]) # depth
+                            df[predictions[0].keypoints[i]+".z"].append(cloud3d[i][1]) # altitude
+                            df[predictions[0].keypoints[i]+".proba"].append(cloud3d[i][3]) # proba FIXME
+
 
                     df["timestamp"].append(ts-t0)
                 
@@ -231,6 +281,7 @@ class pifpaf3D:
                             last_saved_ts = ts
                             self.colorVideoRGB.write(annotated_rgb)
                             self.colorVideoDepth.write(annotated_depth)
+                            self.colorVideoNA.write(color_image)
                             last_saved_ts = time.time()
 
                         else:
@@ -238,6 +289,7 @@ class pifpaf3D:
                             if elapsed > (1/self.cfg.EXPORT_FPS):
                                 self.colorVideoRGB.write(annotated_rgb)
                                 self.colorVideoDepth.write(annotated_depth)
+                                self.colorVideoNA.write(color_image)
                                 last_saved_ts = time.time()
                 
                 i+=1
@@ -251,6 +303,7 @@ class pifpaf3D:
             if cfg.EXPORT_VIDEO:
                 self.colorVideoRGB.release()
                 self.colorVideoDepth.release()
+                self.colorVideoNA.release()
             cv2.destroyAllWindows()
 
 
@@ -277,5 +330,3 @@ if __name__ == "__main__":
             _3Dpifpaf = pifpaf3D(cfg)
             _3Dpifpaf.process_bag()
             print()
-
-        
